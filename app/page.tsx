@@ -5,6 +5,7 @@ import { Config, defaultConfig, parseYaml, stringifyYaml } from "../lib/yaml";
 import YamlEditor from "../components/YamlEditor";
 import { AutocompleteItem } from "../components/YamlEditor/types";
 import debounce from "lodash.debounce";
+import ConfigForm from "../components/ConfigForm";
 
 export default function HomePage() {
   const [yamlText, setYamlText] = useState<string>(stringifyYaml(defaultConfig));
@@ -47,6 +48,14 @@ export default function HomePage() {
     loadAutocomplete();
   }, []);
 
+  useEffect(() => {
+    if (lastSource === 'yaml') {
+      return;
+    }
+    setYamlText(stringifyYaml(config));
+  }, [config, lastSource]);
+  
+
   const debouncedSave = useMemo(
     () =>
       debounce(async (nextConfig: Config) => {
@@ -69,6 +78,7 @@ export default function HomePage() {
       }, 500),
     []
   );
+ 
   useEffect(() => {
     debouncedSave(config);
     return () => {
@@ -76,7 +86,7 @@ export default function HomePage() {
     };
   }, [config, debouncedSave]);
 
-  const handleYamlChange = (nextYaml: string) => {
+ const handleYamlChange = (nextYaml: string) => {
     setLastSource('yaml');
     setYamlText(nextYaml);
     try {
@@ -102,8 +112,14 @@ export default function HomePage() {
           </section>
           <section className="panel">
           <h2>Configuration Form</h2>
-          {lastSource}
-          Configuration form component goes here
+         <ConfigForm
+            config={config}
+            onChange={(nextConfig) => {
+              setLastSource('form');
+              setConfig(nextConfig);
+            }}
+          />
+          {saveError ? <div className="status error">{saveError}</div> : <div className="status">Changes save after a short pause.</div>}
         </section>
         </div>
     </main>
