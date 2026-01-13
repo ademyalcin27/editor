@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 import { AutocompleteItem, YamlEditorProps } from './types';
 import { mergeSuggestions, staticSuggestions, triggerCharacters } from './utils';
 
@@ -17,7 +18,7 @@ export default function YamlEditor({ value, onChange, error, suggestions = [] }:
 
     const disposable = monaco.languages.registerCompletionItemProvider('yaml', {
       triggerCharacters,
-      provideCompletionItems: (model, position) => {
+      provideCompletionItems: (model: monaco.editor.ITextModel, position: monaco.Position) => {
         const word = model.getWordUntilPosition(position);
         const range = {
           startLineNumber: position.lineNumber,

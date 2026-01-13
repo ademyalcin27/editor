@@ -86,7 +86,7 @@ export default function HomePage() {
     };
   }, [config, debouncedSave]);
 
- const handleYamlChange = (nextYaml: string) => {
+  const handleYamlChange = (nextYaml: string) => {
     setLastSource('yaml');
     setYamlText(nextYaml);
     try {
