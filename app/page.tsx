@@ -23,10 +23,14 @@ export default function HomePage() {
       }
     };
 
-    const loadAutocomplete = async () => {
+   const loadAutocomplete = async () => {
       try {
-        // Fetch autocomplete suggestions from API
-        setSuggestions([]);
+        const response = await fetch('/api/autocomplete');
+        if (!response.ok) {
+          return;
+        }
+        const data = (await response.json()) as { items: AutocompleteItem[] };
+        setSuggestions(data.items ?? []);
       } catch {
         setSuggestions([]);
       }
