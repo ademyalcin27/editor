@@ -16,8 +16,14 @@ export default function HomePage() {
   useEffect(() => {
     const loadConfig = async () => {
       try {
-
-        // fetch config from API
+        const response = await fetch('/api/config');
+        if (!response.ok) {
+          throw new Error('Failed to load configuration.');
+        }
+        const data = (await response.json()) as Config;
+        setLastSource('load');
+        setConfig(data);
+        setYamlText(stringifyYaml(data));
       } catch (error) {
         setSaveError(error instanceof Error ? error.message : 'Failed to load configuration.');
       }
