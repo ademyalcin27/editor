@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Config, defaultConfig, parseYaml, stringifyYaml } from "../lib/yaml";
 import YamlEditor from "../components/YamlEditor";
 import { AutocompleteItem } from "../components/YamlEditor/types";
+import debounce from "lodash.debounce";
 
 export default function HomePage() {
   const [yamlText, setYamlText] = useState<string>(stringifyYaml(defaultConfig));
@@ -46,6 +47,35 @@ export default function HomePage() {
     loadAutocomplete();
   }, []);
 
+  const debouncedSave = useMemo(
+    () =>
+      debounce(async (nextConfig: Config) => {
+        try {
+          const response = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nextConfig)
+          });
+
+          if (!response.ok) {
+            const payload = await response.json().catch(() => ({}));
+            throw new Error(payload?.error ?? 'Failed to save configuration.');
+          }
+
+          setSaveError(null);
+        } catch (error) {
+          setSaveError(error instanceof Error ? error.message : 'Failed to save configuration.');
+        }
+      }, 500),
+    []
+  );
+  useEffect(() => {
+    debouncedSave(config);
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [config, debouncedSave]);
+
   const handleYamlChange = (nextYaml: string) => {
     setLastSource('yaml');
     setYamlText(nextYaml);
@@ -57,6 +87,7 @@ export default function HomePage() {
       setYamlError(error instanceof Error ? error.message : 'Invalid YAML.');
     }
   };
+
   return (
     <main>
       <header>

@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import { defaultConfig, parseYaml, stringifyYaml } from "../../../lib/yaml";
+import {
+  defaultConfig,
+  parseYaml,
+  stringifyYaml,
+  validateConfig,
+} from "../../../lib/yaml";
 
 const CONFIG_PATH = path.join(process.cwd(), "config.yaml");
 export const runtime = "nodejs";
@@ -22,5 +27,19 @@ export async function GET() {
       { error: "Failed to read configuration." },
       { status: 500 }
     );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const config = validateConfig(body);
+    const yaml = stringifyYaml(config);
+    await fs.writeFile(CONFIG_PATH, yaml, "utf8");
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to save configuration.";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
